@@ -247,6 +247,18 @@ same way (see `Getting Started`_) as we would do with shipped models. The
 complete example code can be found `here
 <https://github.com/eth-cscs/abcpy/blob/master/examples/gaussian_extended_with_model.py>`_
 
+Use ABCpy with a model written in R
+==========================
+
+Statisticians often use the R language to build statistical models. R models can be incorporated within the ABCpy language with the `rpy2` Python package. We show how to use the `rpy2` package to connect with a model written in R. 
+
+Continuing from the previous section we use a simple Gaussian model as an example. 
+
+.. literalinclude:: ../../examples/extensions/models/gaussian_R/gaussian_model.R
+    :language: R
+
+
+
 ..
   Extending: Add your Distance
   ============================
