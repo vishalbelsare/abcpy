@@ -1,21 +1,15 @@
+import numpy as np
 
+from abcpy.models import Model
 
 import rpy2
 import rpy2.robjects as robjects
 import rpy2.robjects.numpy2ri
 rpy2.robjects.numpy2ri.activate()
-import graph_ABC
-
-import numpy as np
-
-from abcpy.models import Model
 
 robjects.r('''
        source('gaussian_model.R')
 ''')
-
-c = robjects.r['c']
-r_unlist = robjects.r['unlist']
 
 r_simple_gaussian = robjects.globalenv['simple_gaussian']
 
@@ -44,8 +38,8 @@ class Gaussian(Model):
         self.set_parameters(sample)
 
     def simulate(self, k):
-        output = np.asarray(r_simple_gaussian(self.mu, self.sigma, k)).tolist()
-        return list(output)
+        output = list(r_simple_gaussian(self.mu, self.sigma, k))
+        return output
 
     
 def infer_parameters():
@@ -113,7 +107,7 @@ journal = infer_parameters()
 mu = journal.get_parameters()[:,0].reshape(-1,1)
 sigma = journal.get_parameters()[:,1].reshape(-1,1)
 
-
+import graph_ABC
 plot_mu = graph_ABC.plot(mu, true_value = 170)
 plot_sigma = graph_ABC.plot(sigma, true_value = 15)
 
