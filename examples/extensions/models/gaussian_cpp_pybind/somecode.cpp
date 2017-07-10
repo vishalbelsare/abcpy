@@ -8,6 +8,8 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+namespace py = pybind11;
+
 
 #include <vector>
 #include <armadillo>
@@ -15,7 +17,6 @@
 
 using namespace arma;
 using namespace std;
-namespace py = pybind11;
 
 
 
