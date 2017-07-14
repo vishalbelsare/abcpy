@@ -3,7 +3,7 @@ import numpy as np
 from abcpy.models import Model
 
 import cppimport
-cpp_functions = cppimport.imp("somecode")
+cpp_functions = cppimport.imp("gaussian_model_simple")
 gaussian_cpp = cpp_functions.gaussian_cpp
 
 
