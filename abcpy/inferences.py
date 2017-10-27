@@ -3,7 +3,7 @@ from abc import ABCMeta, abstractmethod, abstractproperty
 import numpy as np
 from abcpy.output import Journal
 from scipy import optimize
-
+import sklearn.covariance
 
 class InferenceMethod(metaclass = ABCMeta):
     """
@@ -913,7 +913,7 @@ class SABC(BaseAnnealing, InferenceMethod):
         self.all_distances_bds = None
 
 
-    def sample(self, observations, steps, epsilon, n_samples = 10000, n_samples_per_param = 1, beta = 2, delta = 0.2, v = 0.3, ar_cutoff = 0.5, resample = None, n_update = None, adaptcov = 1, full_output=0):
+    def sample(self, observations, steps, epsilon, n_samples = 10000, n_samples_per_param = 1, beta = 2, delta = 0.2, v = 0.3, ar_cutoff = 0.5, resample = None, n_update = None, adaptcov = 1, full_output=0, robust = False):
         """Samples from the posterior distribution of the model parameter given the observed
         data observations.
 
@@ -1037,9 +1037,19 @@ class SABC(BaseAnnealing, InferenceMethod):
             else:
                 U = np.mean(smooth_distances)
             epsilon = self._schedule(U, v)
+     
             if accepted_parameters.shape[1] > 1:
-                accepted_cov_mat = beta * np.cov(np.transpose(accepted_parameters)) + \
-                                   0.0001 * np.trace(np.cov(np.transpose(accepted_parameters))) * np.eye(
+                if robust == False:
+                    cov_mat = np.cov(np.transpose(accepted_parameters))
+                else: 
+                    # Neither of these (commented and uncommented lines below) work. 
+                    # There is a covariance matrix not full rank error. 
+                    # This code are returns similar results to np.cov when I use test data. 
+                    #cov_mat = sklearn.covariance.MinCovDet().fit(np.array(accepted_parameters)).correct_covariance(accepted_parameters).covariance_     
+                    cov_mat = sklearn.covariance.EmpiricalCovariance().fit(np.array(accepted_parameters)).covariance_        
+
+                accepted_cov_mat = beta * cov_mat + \
+                                   0.0001 * np.trace(cov_mat) * np.eye(
                                        accepted_parameters.shape[1])
             else:
                 accepted_cov_mat = beta * np.var(np.transpose(accepted_parameters)) + \
