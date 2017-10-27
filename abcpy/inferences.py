@@ -913,7 +913,7 @@ class SABC(BaseAnnealing, InferenceMethod):
         self.all_distances_bds = None
 
 
-    def sample(self, observations, steps, epsilon, n_samples = 10000, n_samples_per_param = 1, beta = 2, delta = 0.2, v = 0.3, ar_cutoff = 0.5, resample = None, n_update = None, adaptcov = 1, full_output=0, robust = False):
+    def sample(self, observations, steps, epsilon, n_samples = 10000, n_samples_per_param = 1, beta = 2, delta = 0.2, v = 0.3, ar_cutoff = 0.5, resample = None, n_update = None, adaptcov = 1, full_output=0, cov_func = None):
         """Samples from the posterior distribution of the model parameter given the observed
         data observations.
 
@@ -988,6 +988,13 @@ class SABC(BaseAnnealing, InferenceMethod):
         sample_array[0] = n_samples
         sample_array[1:] = n_update
 
+        if cov_func is None:
+            def cov_func(x): 
+                if x.shape[1] > 1:
+                    return(np.cov(np.transpose(x)))
+                else:
+                    return(np.cov(np.transpose(x)))
+
         ## Acceptance counter to determine the resampling step
         accept = 0
         samples_until = 0
@@ -1038,22 +1045,16 @@ class SABC(BaseAnnealing, InferenceMethod):
                 U = np.mean(smooth_distances)
             epsilon = self._schedule(U, v)
      
+            cov_mat = cov_func(accepted_parameters)
+            
             if accepted_parameters.shape[1] > 1:
-                if robust == False:
-                    cov_mat = np.cov(np.transpose(accepted_parameters))
-                else: 
-                    # Neither of these (commented and uncommented lines below) work. 
-                    # There is a covariance matrix not full rank error. 
-                    # This code are returns similar results to np.cov when I use test data. 
-                    #cov_mat = sklearn.covariance.MinCovDet().fit(np.array(accepted_parameters)).correct_covariance(accepted_parameters).covariance_     
-                    cov_mat = sklearn.covariance.EmpiricalCovariance().fit(np.array(accepted_parameters)).covariance_        
 
                 accepted_cov_mat = beta * cov_mat + \
                                    0.0001 * np.trace(cov_mat) * np.eye(
                                        accepted_parameters.shape[1])
             else:
-                accepted_cov_mat = beta * np.var(np.transpose(accepted_parameters)) + \
-                                   0.0001 * (np.var(np.transpose(accepted_parameters))) * np.eye(
+                accepted_cov_mat = beta * cov_mat + \
+                                   0.0001 * cov_mat * np.eye(
                                        accepted_parameters.shape[1])
 
             # 4: Show progress and if acceptance rate smaller than a value break the iteration
